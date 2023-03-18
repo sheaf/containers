@@ -174,7 +174,7 @@ zipWithMatched f = WhenMatched $
 -- but @mapMaybeMissing@ uses fewer unnecessary 'Applicative' operations.
 mapMaybeMissing :: Applicative f => (Key -> x -> Maybe y) -> WhenMissing f x y
 mapMaybeMissing f = WhenMissing
-  { missingSubtree = \m -> pure $! mapMaybeWithKey f m
+  { missingSubtree = \m -> pure $! mapMaybeWithKey f (NonEmpty m)
   , missingKey = \k x -> pure $! forceMaybe $! f k x }
 {-# INLINE mapMaybeMissing #-}
 
@@ -189,7 +189,7 @@ mapMaybeMissing f = WhenMissing
 -- but @mapMissing@ is somewhat faster.
 mapMissing :: Applicative f => (Key -> x -> y) -> WhenMissing f x y
 mapMissing f = WhenMissing
-  { missingSubtree = \m -> pure $! mapWithKey f m
+  { missingSubtree = \m -> pure $! mapWithKey f (NonEmpty m)
   , missingKey = \k x -> pure $! Just $! f k x }
 {-# INLINE mapMissing #-}
 
@@ -200,7 +200,7 @@ mapMissing f = WhenMissing
 traverseMaybeMissing :: Applicative f
                      => (Key -> x -> f (Maybe y)) -> WhenMissing f x y
 traverseMaybeMissing f = WhenMissing
-  { missingSubtree = traverseMaybeWithKey f
+  { missingSubtree = traverseMaybeWithKey f . NonEmpty
   , missingKey = \k x -> forceMaybe <$> f k x }
 {-# INLINE traverseMaybeMissing #-}
 
@@ -208,7 +208,7 @@ traverseMaybeMissing f = WhenMissing
 traverseMissing :: Applicative f
                      => (Key -> x -> f y) -> WhenMissing f x y
 traverseMissing f = WhenMissing
-  { missingSubtree = traverseWithKey f
+  { missingSubtree = traverseWithKey f . NonEmpty
   , missingKey = \k x -> (Just $!) <$> f k x }
 {-# INLINE traverseMissing #-}
 

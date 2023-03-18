@@ -3,10 +3,12 @@
 #ifdef STRICT
 import Data.IntMap.Strict as Data.IntMap hiding (showTree)
 import Data.IntMap.Strict.Internal (traverseMaybeWithKey)
+import qualified Data.IntMap.NonEmpty.Strict.Internal as NE
 import Data.IntMap.Merge.Strict
 #else
 import Data.IntMap.Lazy as Data.IntMap hiding (showTree)
 import Data.IntMap.Internal (traverseMaybeWithKey)
+import qualified Data.IntMap.NonEmpty.Internal as NE
 import Data.IntMap.Merge.Lazy
 #endif
 import Data.IntMap.Internal.Debug (showTree)
@@ -1276,7 +1278,7 @@ prop_mergeWithKeyModel xs ys
           testMergeWithKey f keep_x keep_y
             = toList (mergeWithKey f (keep keep_x) (keep keep_y) xm ym) == emulateMergeWithKey f keep_x keep_y
               where keep False _ = empty
-                    keep True  m = m
+                    keep True  m = Data.IntMap.NonEmpty m
 
                     emulateMergeWithKey f keep_x keep_y
                       = Maybe.mapMaybe combine (sort $ List.union (List.map fst xs') (List.map fst ys'))

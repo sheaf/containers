@@ -47,6 +47,10 @@ Library
         Data.IntMap.Strict.Internal
         Data.IntMap.Internal
         Data.IntMap.Internal.Debug
+        Data.IntMap.NonEmpty.Lazy
+        Data.IntMap.NonEmpty.Strict
+        Data.IntMap.NonEmpty.Internal
+        Data.IntMap.NonEmpty.Strict.Internal
         Data.IntMap.Merge.Lazy
         Data.IntMap.Merge.Strict
         Data.IntSet.Internal

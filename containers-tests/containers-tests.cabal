@@ -86,6 +86,10 @@ library
     Data.IntMap.Merge.Strict
     Data.IntMap.Strict
     Data.IntMap.Strict.Internal
+    Data.IntMap.NonEmpty.Strict
+    Data.IntMap.NonEmpty.Lazy
+    Data.IntMap.NonEmpty.Internal
+    Data.IntMap.NonEmpty.Strict.Internal
     Data.IntSet
     Data.IntSet.Internal
     Data.Map

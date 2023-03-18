@@ -3,6 +3,7 @@ module LookupGE_IntMap where
 
 import Prelude hiding (null)
 import Data.IntMap.Internal
+import qualified Data.IntMap.NonEmpty.Internal as NE
 
 lookupGE1 :: Key -> IntMap a -> Maybe (Key,a)
 lookupGE1 k m =
@@ -11,62 +12,73 @@ lookupGE1 k m =
         (_,Nothing,r) -> findMinMaybe r
 
 lookupGE2 :: Key -> IntMap a -> Maybe (Key,a)
-lookupGE2 k t = case t of
-    Bin _ m l r | m < 0 -> if k >= 0
-      then go l
-      else case go r of
-        Nothing -> Just $ findMin l
-        justx -> justx
-    _ -> go t
+lookupGE2 k t0 = case t0 of
+    NonEmpty t
+      | NE.Bin _ m l r <- t
+      , m < 0
+      -> if k >= 0
+         then go l
+         else case go r of
+           Nothing -> Just $ NE.findMin l
+           justx   -> justx
+      | otherwise
+      -> go t
+    Nil -> Nothing
   where
-    go (Bin p m l r)
+    go (NE.Bin p m l r)
       | nomatch k p m = if k < p
-        then Just $ findMin l
+        then Just $ NE.findMin l
         else Nothing
       | zero k m = case go l of
-        Nothing -> Just $ findMin r
+        Nothing -> Just $ NE.findMin r
         justx -> justx
       | otherwise = go r
-    go (Tip ky y)
+    go (NE.Tip ky y)
       | k > ky = Nothing
       | otherwise = Just (ky, y)
-    go Nil = Nothing
 
 lookupGE3 :: Key -> IntMap a -> Maybe (Key,a)
-lookupGE3 k t = k `seq` case t of
-    Bin _ m l r | m < 0 -> if k >= 0
+lookupGE3 k (NonEmpty t) = k `seq` case t of
+    NE.Bin _ m l r | m < 0 ->
+      if k >= 0
       then go Nothing l
-      else go (Just (findMin l)) r
+      else go (Just (NE.findMin l)) r
     _ -> go Nothing t
   where
-    go def (Bin p m l r)
-      | nomatch k p m = if k < p then Just $ findMin l else def
-      | zero k m  = go (Just $ findMin r) l
+    go def (NE.Bin p m l r)
+      | nomatch k p m = if k < p then Just $ NE.findMin l else def
+      | zero k m  = go (Just $ NE.findMin r) l
       | otherwise = go def r
-    go def (Tip ky y)
+    go def (NE.Tip ky y)
       | k > ky    = def
       | otherwise = Just (ky, y)
-    go def Nil  = def
+lookupGE3 _ Nil = Nothing
 
 lookupGE4 :: Key -> IntMap a -> Maybe (Key,a)
-lookupGE4 k t = k `seq` case t of
-    Bin _ m l r | m < 0 -> if k >= 0 then go Nil l
-                                     else go l r
-    _ -> go Nil t
+lookupGE4 k (NonEmpty t) = k `seq` case t of
+    NE.Bin _ m l r | m < 0 -> if k >= 0 then go' l
+                                        else go l r
+    _ -> go' t
   where
-    go def (Bin p m l r)
+    go def (NE.Bin p m l r)
       | nomatch k p m = if k < p then fMin l else fMin def
       | zero k m  = go r l
       | otherwise = go def r
-    go def (Tip ky y)
+    go def (NE.Tip ky y)
       | k > ky    = fMin def
       | otherwise = Just (ky, y)
-    go def Nil  = fMin def
+    go' (NE.Bin p m l r)
+      | nomatch k p m = if k < p then fMin l else Nothing
+      | zero k m  = go r l
+      | otherwise = go' r
+    go' (NE.Tip ky y)
+      | k > ky    = Nothing
+      | otherwise = Just (ky, y)
 
-    fMin :: IntMap a -> Maybe (Key, a)
-    fMin Nil = Nothing
-    fMin (Tip ky y) = Just (ky, y)
-    fMin (Bin _ _ l _) = fMin l
+    fMin :: NE.IntMap a -> Maybe (Key, a)
+    fMin (NE.Tip ky y) = Just (ky, y)
+    fMin (NE.Bin _ _ l _) = fMin l
+lookupGE4 k Nil = Nothing
 
 -------------------------------------------------------------------------------
 -- Utilities
